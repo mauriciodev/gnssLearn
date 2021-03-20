@@ -19,9 +19,9 @@ int main(int argc, char *argv[])
     qDebug()<<"GPS time of week: "<< fixed<<gnsstime::getGPSTimeOfWeek(epoch2);
     //rinex tests
 
-    test1.readNavFile("../data/BRDC00WRD_S_20210680000_01D_MN.rnx");
+    test1.readNavFile("./data/BRDC00WRD_S_20210680000_01D_MN.rnx");
     qDebug()<<test1.navDataEpochs.size() << " satellite epochs read.";
-    test1.readObsFile("../data/RJNI00BRA_R_20210680000_01D_15S_MO.rnx");
+    test1.readObsFile("./data/RJNI00BRA_R_20210680000_01D_15S_MO.rnx");
     qDebug()<<test1.obsDataEpochs.size() << " observations read.";
 
     //orbit tests
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     std::cout << test1.getSatPositionMatrix(sats,epoch) <<endl;
     qDebug() << test1.getObs("G14",epoch);
     sps spsTest;
-    spsTest.runSPS("../data/RJNI00BRA_R_20210680000_01D_15S_MO.rnx","../data/BRDC00WRD_S_20210680000_01D_MN.rnx");
+    spsTest.runSPS("./data/RJNI00BRA_R_20210680000_01D_15S_MO.rnx","./data/BRDC00WRD_S_20210680000_01D_MN.rnx");
 
     //getSatPositionMatrix
     return a.exec();
