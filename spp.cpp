@@ -1,17 +1,16 @@
-#include "sps.h"
+#include "spp.h"
 
-sps::sps()
+spp::spp()
 {
 
 }
 
-Vector3d sps::runSPS(QString rinexObsFile, QString rinexNavFile)
+Vector3d spp::runSPP(QString rinexObsFile, QString rinexNavFile, QDateTime epoch)
 {
     this->readingDriver.readNavFile(rinexNavFile);
     this->readingDriver.readObsFile(rinexObsFile);
 
-    //TODO: should be a for for each epoch on obs file
-    QDateTime epoch=QDateTime::fromString("2021 03 09 23 30 00", this->readingDriver.rinexDateFormatString());
+
 
     //let's remember which satellites are going to be used so that we don't have to search for the pairs over and over.
     auto sats=this->readingDriver.getObsSatellitesOnEpoch(epoch);
@@ -48,7 +47,7 @@ Vector3d sps::runSPS(QString rinexObsFile, QString rinexNavFile)
         auto X0m=X0.transpose().replicate(nsats,1);
 
         if (i==1) {
-            P = MatrixXd::Identity(nobs, nobs); //* 0.8;*sin(2.*PI*elev[:,0]/360);
+            P = MatrixXd::Identity(nobs, nobs); //TODO:* 0.8;*sin(2.*PI*elev[:,0]/360);
         } else {
             P=MVC_L;
         }
@@ -62,9 +61,8 @@ Vector3d sps::runSPS(QString rinexObsFile, QString rinexNavFile)
         A.block(0,0,nobs,3)=DX0.cwiseQuotient(rho0.replicate(1,3));
         //cout<<A<<endl;
         //element-wise power then sum the line
-        //auto rho0=np.sqrt(np.power(DX0,2).sum(axis=1))
 
-        VectorXd L=Lb-rho0+c*dt-VectorXd::Constant(nobs,1,cdt_r);
+        VectorXd L=Lb-rho0+c*dt-VectorXd::Constant(nobs,1,cdt_r); //- or + ?
 
         //Least Squares
         MatrixXd AtPA=A.transpose() * P * A;
@@ -77,7 +75,7 @@ Vector3d sps::runSPS(QString rinexObsFile, QString rinexNavFile)
         sigma2/= (nsats-4.);
         MatrixXd MVC_X=sigma2*AtPA.inverse();
         MVC_L=A * MVC_X * A.transpose();
-        cout<< "Estimated XYZ: " << X1.transpose() << " dt_r: "<< cdt_r/c <<endl;
+        cout<< "Estimated XYZ: " << fixed << X1.transpose() << " dt_r: "<< cdt_r/c <<endl;
         dX0X1=X_fit.segment(0,3).norm();
 
 
@@ -86,7 +84,7 @@ Vector3d sps::runSPS(QString rinexObsFile, QString rinexNavFile)
     return X1;
 }
 
-MatrixXd sps::getObservationMatrix(QStringList sats, QDateTime epoch)
+MatrixXd spp::getObservationMatrix(QStringList sats, QDateTime epoch)
 {
     MatrixXd m;
     //listing the satellites used on the given epoch
@@ -98,17 +96,5 @@ MatrixXd sps::getObservationMatrix(QStringList sats, QDateTime epoch)
 
     return m;
     //TODO: use other measures. For now, lets go with C1
-    /*;
-    m.resize(sats.length(),4);
-    for (int i=0;i<sats.length(); i++){
-        auto v = this->getSatPos(sats[i],epoch);
-        if (v.length()==0) { //sorry, couldn't find a sattelite position. This should be aborted.
-            return m;
-        } else {
-            m(i,0)=v[0];
-            m(i,1)=v[1];
-            m(i,2)=v[2];
-        }
-    }
-    return m;*/
+
 }

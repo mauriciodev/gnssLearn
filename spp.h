@@ -7,13 +7,13 @@
 #include "math.h"
 using namespace Eigen;
 
-class sps
+class spp
 {
 
 public:
-    sps();
+    spp();
     rinex3 readingDriver;
-    Vector3d runSPS(QString rinexObsFile, QString rinexNavFile);
+    Vector3d runSPP(QString rinexObsFile, QString rinexNavFile, QDateTime epoch);
     MatrixXd getObservationMatrix(QStringList sats, QDateTime epoch);
 };
 

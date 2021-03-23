@@ -64,23 +64,29 @@ bool rinex3::readNavFile(QString filePath)
     QDateTime epoch;
     QString satName;
     //reading epochs
+    this->navDataEpochs.clear();
     while(!in.atEnd()) {
         QVector<double> dvalues;
         line = in.readLine();
 
         if (line[0].isLetter()) {
             //This is a new satellite epoch "M1d1y9800:01:02",
-            QString ds=line.mid(4, 19);
-            epoch=QDateTime::fromString(ds, this->rinexDateFormatString());
             satName=line.mid(0,4).trimmed();
             //epoch.addSecs(this->getSystemDelay(satName));
-            QString values=line.mid(23);
-            dvalues.append(this->readNavDoubles(values));
-            this->setNavData(satName,epoch,dvalues);
+            if (!this->ignoreSystems.contains(satName[0])) {
+                QString ds=line.mid(4, 19);
+                epoch=QDateTime::fromString(ds, this->rinexDateFormatString());
+                QString values=line.mid(23);
+                dvalues.append(this->readNavDoubles(values));
+                this->setNavData(satName,epoch,dvalues);
+                //qDebug() << satName << epoch << this->navDataEpochs[satName].size();
+            }
         } else {
             //these is more data for the epoch
             QString values=line.mid(4);
-            this->setNavData(satName,epoch,this->readNavDoubles(values));
+            if (!this->ignoreSystems.contains(satName[0])) {
+                this->setNavData(satName,epoch,this->readNavDoubles(values));
+            }
         }
     }
 
@@ -117,12 +123,13 @@ bool rinex3::readObsFile(QString filePath)
                 obsTypes[currSystem].append(t.split(" "));
             }
 
-            qDebug()<<currSystem << ": "<< obsTypes[currSystem];
+            //qDebug()<<currSystem << ": "<< obsTypes[currSystem];
         }
     }
     QDateTime epoch;
     QString satName;
     //reading epochs
+    obsDataEpochs.clear();
     while(!in.atEnd()) {
         QVector<double> dvalues;
         line = in.readLine();
@@ -189,11 +196,12 @@ QVector<double> rinex3::getSatPos(QString sat, QDateTime ttDate)
             qDebug()<<"Could not find satellite data for "<<sat<<" at "<<ttDate;
             return coords; // empty vector
         }
+
         QDateTime tocDate=latestEpochIter.key();
         double toc=gnsstime::getGPSTimeOfWeek(tocDate);
         double toe=nav[11];
         double tt=gnsstime::getGPSTimeOfWeek(ttDate);
-
+        tt+=nav[0]; //TODO: Check if this is really it. Doesn't look right.
         //from Monico (2008) chapter 4
         double dtSat=nav[0]+nav[1]*(tt-toc)+nav[2]* pow(tt-toc ,2);
         double t_gps=tt-dtSat;
@@ -216,7 +224,7 @@ QVector<double> rinex3::getSatPos(QString sat, QDateTime ttDate)
         double crc=nav[16];
         double w=nav[17];
         double OMEGA_DOT=nav[18];
-        double IDOT=nav[20];
+        double IDOT=nav[19];
 
         double Mk=M0+(sqrt(GM)/pow(srqt_a,3)+dn)*dtk;
         double Ek=this->solveEk(e,Mk); //newton raphson, really?
@@ -224,6 +232,7 @@ QVector<double> rinex3::getSatPos(QString sat, QDateTime ttDate)
         double sinv=sqrt(1-e*e)*sin(Ek)/(1-e*cos(Ek));
         double v=acos(cosv);
         if (sinv<0) v=v*-1.;
+        if (v<0) v+=2*PI;
         double phi=w+v;
         double uk=phi+cuc*cos(2*phi)+cus*sin(2*phi);
         double r=srqt_a*srqt_a*(1-e*cos(Ek))+crc*cos(2*phi)+crs*sin(2*phi);
@@ -235,7 +244,7 @@ QVector<double> rinex3::getSatPos(QString sat, QDateTime ttDate)
         double X=xk*cos(om)-yk*sin(om)*cos(i);
         double Y=xk*sin(om)+yk*cos(om)*cos(i);
         double Z=yk*sin(i);
-        qDebug()<<fixed << X << Y << Z;
+        qDebug()<<fixed << sat<< X << Y << Z;
 
         coords={X,Y,Z};
     }
@@ -249,12 +258,12 @@ QString rinex3::getSatType(QString sat)
 
 /*! Get an iterator for the latest navigation data available on the data structure. The epoch must contain the given sattelite.*/
 QMap<QDateTime,QVector<double>>::iterator rinex3::getLatestEpochIter(QString sat, QDateTime epoch) {
-    auto res= this->navDataEpochs[sat].lowerBound(epoch);
+    auto res= this->navDataEpochs[sat].lowerBound(epoch.addSecs(1)); //had to add one because when epoch is exactly the same as in nav data, QMap was returning the equal, not the next one.
     if (res != this->navDataEpochs[sat].begin()) {
         res-=1;
     } else {
         return NULL;
-    }
+    } //TODO: Check what's happening to the last index
     return res;
 }
 
@@ -279,15 +288,8 @@ double rinex3::getSystemDelay(QString systemChar)
     return this->GNSSToUTCDelay[systemChar.at(0)];
 }
 
-void rinex3::setNavData(QString sat, QDateTime epoch, QVector<double> dvalues)
-{//if data already exists, appends
-    navDataEpochs[sat][epoch].append(dvalues);
-}
 
-QVector<double> rinex3::getNavData(QString sat, QDateTime epoch)
-{
-    return navDataEpochs[sat][epoch];
-}
+
 
 MatrixXd rinex3::getSatPositionMatrix(QStringList sats, QDateTime epoch)
 {
@@ -298,6 +300,7 @@ MatrixXd rinex3::getSatPositionMatrix(QStringList sats, QDateTime epoch)
         if (v.length()==0) { //sorry, couldn't find a sattelite position. This should be aborted.
             return m;
         } else {
+            //qDebug() << sats[i] << v ;
             m(i,0)=v[0];
             m(i,1)=v[1];
             m(i,2)=v[2];

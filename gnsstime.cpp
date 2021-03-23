@@ -15,24 +15,6 @@ QDateTime gnsstime::toGPSTime(QDateTime utc_time, int leapSeconds=37)
 }
 
 
-
-QDateTime gnsstime::toUt1(QDateTime utc_time)
-{
-
-}
-
-QDateTime gnsstime::toTAI(QDateTime utc_time)
-{
-
-}
-
-QDateTime gnsstime::toTT(QDateTime utc_time)
-{
-
-}
-
-
-
 int gnsstime::getGPSWeek(QDateTime utc_time)
 {
     double JD = gnsstime::julianDay(utc_time);

@@ -15,9 +15,6 @@ public:
     gnsstime();
 
     static QDateTime toGPSTime(QDateTime utc_time, int leapSeconds);
-    static QDateTime toUt1(QDateTime utc_time);
-    static QDateTime toTAI(QDateTime utc_time);
-    static QDateTime toTT(QDateTime utc_time);
     static double getGPSTimeOfWeek(QDateTime utc_time);
     static int getGPSWeekDay(QDateTime utc_time);
     static int getGPSWeek(QDateTime utc_time);
