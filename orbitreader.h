@@ -10,7 +10,7 @@ using namespace Eigen;
 
 class orbitreader
 {
-
+private:
 
 public:
     orbitreader();
@@ -26,6 +26,9 @@ public:
     //not virtual
     void setNavData(QString sat, QDateTime epoch, QVector<double> dvalues);
     QVector<double> getNavData(QString sat, QDateTime epoch);
+    Vector4d QVector2Eigen(QVector<double> values);
+    QMap<QDateTime,QVector<double>>::iterator getLatestEpochIter(QString sat, QDateTime epoch);
+
 };
 
 #endif // ORBITREADER_H

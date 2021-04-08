@@ -23,7 +23,7 @@ typedef QPair<QString,QDateTime> satEpoch;
 class rinex3: public orbitreader
 {
 private:
-    QString ignoreSystems="SRECI";
+    QString ignoreSystems="SRCI";
     QVector<double> readNavDoubles(QString in);
     QVector<double> readObsDoubles(QString in);
     QStringList obsHeader,navHeader;
@@ -52,10 +52,9 @@ public:
     //navigation rinex functions
     double getClockBias(QString sat, QDateTime epoch);
     VectorXd getClockBiasVector(QStringList sats, QDateTime epoch); //should have a virtual parent for every reading driver
-    QVector<double> getSatPos(QString sat, QDateTime ttDate);
+    Vector4d getSatPosition(QString sat, QDateTime ttDate);
     QString getSatType(QString sat);
     QVector<double> getLatestNavData(QString sat, QDateTime epoch);
-    QMap<QDateTime,QVector<double>>::iterator getLatestEpochIter(QString sat, QDateTime epoch);
 
     void fillSystemDelay(int leapSeconds=37);
     double getSystemDelay(QString systemChar);
