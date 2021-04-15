@@ -3,6 +3,7 @@
 #include "sp3.h"
 #include "gnsstime.h"
 #include "spp.h"
+#include "ionosphere.h"
 // add necessary includes here
 
 class gnssLearnTests : public QObject
@@ -20,7 +21,7 @@ private slots:
     void test_sp3();
     void test_Lagrange();
     void test_sp3vsnav();
-
+    void test_TEC();
 };
 
 gnssLearnTests::gnssLearnTests()
@@ -50,15 +51,19 @@ void gnssLearnTests::test_RINEX3() {
 
     test1.readNavFile("./data/BRDC00WRD_S_20210680000_01D_MN.rnx");
     qDebug()<<test1.navDataEpochs.size() << " satellite epochs read.";
+    QBENCHMARK {
     test1.readObsFile("./data/RJNI00BRA_R_20210680000_01D_15S_MO.rnx");
+    }
     qDebug()<<test1.obsDataEpochs.size() << " observations read.";
 
     //orbit tests
     //QDateTime epoch=QDateTime::fromString("2021 03 10 00 00 00", dateFormat);
-    QDateTime epoch=QDateTime::fromString("2021 03 09 23 30 00", dateFormat);
-
+    QDateTime epoch=QDateTime::fromString("2021 03 09 23 59 45", dateFormat);
+    qDebug()<<"Map of observables: " <<test1.getObsMap("G14",epoch)<<endl; //this function requires exact epoch
+    qDebug()<<"Single observable C1C: " <<test1.getObs("G14",epoch,"C1C")<<endl;
+    epoch=QDateTime::fromString("2021 03 09 23 30 00", dateFormat);
     qDebug()<< "Date:"<< epoch;
-    cout<<"G15 satelite position: "<<test1.getSatPosition("G15",epoch);
+    cout<<"G15 satelite position: "<<test1.getSatPosition("G15",epoch).transpose();
     //epoch=QDateTime::fromString("2021 03 09 05 29 30", dateFormat);
     qDebug()<<"GPS Week:" << fixed << gnsstime::getGPSWeek(epoch);
     qDebug()<<"GPS day of week:" << fixed << gnsstime::getGPSWeekDay(epoch);
@@ -122,6 +127,11 @@ void gnssLearnTests::test_Lagrange() {
     sp3 sp3Test;
     qDebug()<<sp3Test.lagrangeInterp(x,y,1.5) << -0.9773;
 }
+
+void gnssLearnTests::test_TEC() {
+
+}
+
 QTEST_APPLESS_MAIN(gnssLearnTests)
 #include "test.moc"
 

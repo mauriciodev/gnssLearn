@@ -66,6 +66,8 @@ public:
     //observation rinex functions
     QStringList getObsSatellitesOnEpoch(QDateTime epoch);
     QVector<double> getObs(QString sat, QDateTime epoch);
+    double getObs(QString sat, QDateTime epoch, QString observable);
+    QMap<QString,double> getObsMap(QString sat, QDateTime epoch);
     Vector3d getX0();
 
     VectorXd getC1Vector(QStringList sats, QDateTime epoch);//should have a virtual parent for every reading driver

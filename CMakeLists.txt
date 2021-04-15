@@ -27,6 +27,7 @@ gnsstime.cpp
 spp.cpp
 sp3.cpp
 orbitreader.cpp
+ionosphere.cpp
 )
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/data/RJNI00BRA_R_20210680000_01D_15S_MO.rnx

@@ -324,6 +324,31 @@ QVector<double> rinex3::getObs(QString sat, QDateTime epoch)
     }
 }
 
+/*! Returns a map with observable names to observable. */
+QMap<QString, double> rinex3::getObsMap(QString sat, QDateTime epoch)
+{
+    QMap<QString, double> res;
+    if (this->obsDataEpochs[epoch].contains(sat)) {
+        QVector<double> values=this->obsDataEpochs[epoch][sat];
+
+        for (int i=0;i<values.length();i++) {
+            QString obsName=this->obsTypes[sat.left(1)][i];
+            res.insert(obsName,values[i]);
+        }
+    }
+    return res;
+}
+
+/*! Returns the value of a single observable. */
+double rinex3::getObs(QString sat, QDateTime epoch, QString observable)
+{
+    if (this->obsDataEpochs[epoch].contains(sat)) {
+        int obsIndex=this->obsTypes[sat.left(1)].indexOf(observable);
+        return this->obsDataEpochs[epoch][sat][obsIndex];
+    }
+    return 0;
+}
+
 Vector3d rinex3::getX0()
 {
     Vector3d X0; X0<<0,0,0;
